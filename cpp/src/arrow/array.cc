@@ -23,7 +23,9 @@
 #include <sstream>
 
 #include "arrow/buffer.h"
+#include "arrow/builder.h"
 #include "arrow/compare.h"
+#include "arrow/memory_pool.h"
 #include "arrow/pretty_print.h"
 #include "arrow/status.h"
 #include "arrow/type_traits.h"
@@ -33,7 +35,6 @@
 #include "arrow/util/macros.h"
 #include "arrow/visitor.h"
 #include "arrow/visitor_inline.h"
-
 namespace arrow {
 
 using internal::ArrayData;
@@ -124,6 +125,25 @@ std::string Array::ToString() const {
   DCHECK(PrettyPrint(*this, 0, &ss).ok());
   return ss.str();
 }
+
+template <>
+Status Array::castTyped<DictionaryType>(std::shared_ptr<Array>* out) {
+  MemoryPool* pool = default_memory_pool();
+  RETURN_NOT_OK(MakeDictionaryArray(pool, *this, out));
+  return Status::OK();
+};
+
+Status Array::cast(const std::shared_ptr<DataType>& type, std::shared_ptr<Array>* out) {
+  switch (type->id()) {
+    case Type::DICTIONARY:
+      RETURN_NOT_OK(castTyped<DictionaryType>(out));
+    default:
+      std::stringstream ss;
+      ss << "Unhandled conversion type from " << this->type()->ToString();
+      ss << "to" << type->ToString();
+      return Status::NotImplemented(ss.str());
+  }
+};
 
 static inline std::shared_ptr<ArrayData> SliceData(const ArrayData& data, int64_t offset,
                                                    int64_t length) {

@@ -239,6 +239,11 @@ class ARROW_EXPORT Array {
   /// \return PrettyPrint representation of array suitable for debugging
   std::string ToString() const;
 
+  Status cast(const std::shared_ptr<DataType>& type, std::shared_ptr<Array>* out);
+
+  template <typename T>
+  Status castTyped(std::shared_ptr<Array>* out);
+
  protected:
   Array() {}
 

@@ -81,6 +81,7 @@ class ARROW_EXPORT Column {
 
   /// Construct from name and array
   Column(const std::string& name, const std::shared_ptr<Array>& data);
+  Column(const std::string& name, const std::shared_ptr<ChunkedArray>& data);
 
   int64_t length() const { return data_->length(); }
 
@@ -103,6 +104,8 @@ class ARROW_EXPORT Column {
   // Verify that the column's array data is consistent with the passed field's
   // metadata
   Status ValidateData();
+
+  Status cast(const std::shared_ptr<DataType>& type, std::shared_ptr<Column>* out);
 
  protected:
   std::shared_ptr<Field> field_;
@@ -223,6 +226,10 @@ class ARROW_EXPORT Table {
   /// Add column to the table, producing a new Table
   Status AddColumn(int i, const std::shared_ptr<Column>& column,
                    std::shared_ptr<Table>* out) const;
+
+  /// Casts the column on position i to the given type
+  Status castColumn(int i, const std::shared_ptr<DataType>& type,
+                    std::shared_ptr<Table>* out) const;
 
   /// \brief Replace schema key-value metadata with new metadata (EXPERIMENTAL)
   /// \since 0.5.0

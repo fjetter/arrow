@@ -23,6 +23,7 @@
 #include <sstream>
 
 #include "arrow/array.h"
+#include "arrow/builder.h"
 #include "arrow/status.h"
 #include "arrow/type.h"
 #include "arrow/util/logging.h"
@@ -119,6 +120,9 @@ Column::Column(const std::shared_ptr<Field>& field,
                const std::shared_ptr<ChunkedArray>& data)
     : field_(field), data_(data) {}
 
+Column::Column(const std::string& name, const std::shared_ptr<ChunkedArray>& data)
+    : field_(::arrow::field(name, data->type())), data_(data) {}
+
 bool Column::Equals(const Column& other) const {
   if (!field_->Equals(other.field())) {
     return false;
@@ -147,6 +151,21 @@ Status Column::ValidateData() {
       return Status::Invalid(ss.str());
     }
   }
+  return Status::OK();
+}
+
+Status Column::cast(const std::shared_ptr<DataType>& type, std::shared_ptr<Column>* out) {
+  std::vector<std::shared_ptr<Array>> new_data;
+  std::shared_ptr<ChunkedArray> chunks = this->data();
+  for (int ix = 0; ix < chunks->num_chunks(); ix++) {
+    std::shared_ptr<Array> chunk = chunks->chunk(ix);
+    std::shared_ptr<Array> converted_chunk;
+    RETURN_NOT_OK(chunk->cast(type, &converted_chunk));
+    new_data.push_back(converted_chunk);
+  }
+  const std::shared_ptr<ChunkedArray> new_chunked_array =
+      std::make_shared<ChunkedArray>(new_data);
+  *out = std::make_shared<Column>(this->name(), new_chunked_array);
   return Status::OK();
 }
 
@@ -412,6 +431,19 @@ Status Table::AddColumn(int i, const std::shared_ptr<Column>& col,
   RETURN_NOT_OK(schema_->AddField(i, col->field(), &new_schema));
 
   *out = std::make_shared<Table>(new_schema, AddVectorElement(columns_, i, col));
+  return Status::OK();
+}
+
+Status Table::castColumn(int i, const std::shared_ptr<DataType>& type,
+                         std::shared_ptr<Table>* out) const {
+  std::shared_ptr<Column> old_col = columns_[i];
+  std::shared_ptr<Column> new_col;
+  std::shared_ptr<Schema> new_schema;
+  RETURN_NOT_OK(old_col->cast(type, &new_col));
+  RETURN_NOT_OK(schema_->RemoveField(i, &new_schema));
+  RETURN_NOT_OK(schema_->AddField(i, new_col->field(), &new_schema));
+  *out = std::make_shared<Table>(
+      new_schema, AddVectorElement(DeleteVectorElement(columns_, i), i, new_col));
   return Status::OK();
 }
 
