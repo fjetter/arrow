@@ -124,5 +124,5 @@ python_version_tests() {
 }
 
 # run tests for python 2.7 and 3.6
-python_version_tests 2.7
+# python_version_tests 2.7
 python_version_tests 3.6
