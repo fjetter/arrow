@@ -137,12 +137,14 @@ Status Array::cast(const std::shared_ptr<DataType>& type, std::shared_ptr<Array>
   switch (type->id()) {
     case Type::DICTIONARY:
       RETURN_NOT_OK(castTyped<DictionaryType>(out));
+      break;
     default:
       std::stringstream ss;
       ss << "Unhandled conversion type from " << this->type()->ToString();
-      ss << "to" << type->ToString();
+      ss << " to " << type->ToString();
       return Status::NotImplemented(ss.str());
   }
+  return Status::OK();
 };
 
 static inline std::shared_ptr<ArrayData> SliceData(const ArrayData& data, int64_t offset,

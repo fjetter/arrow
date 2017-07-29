@@ -886,6 +886,24 @@ class TestPandasConversion(unittest.TestCase):
         assert data_column['numpy_type'] == 'object'
         assert data_column['metadata'] == {'precision': 26, 'scale': 11}
 
+    def test_array_to_categorical(self):
+        arr = np.array([None, 'a', 'b'] * 5, dtype=object)
+        pa_arr = pa.Array.from_pandas(arr, type=pa.string())
+
+        series = pa_arr.to_pandas(to_categorical=True)
+
+        assert series.dtype.name == 'category'
+
+    def test_table_str_to_categorical(self):
+        values = ['a', None, 'b', np.nan]
+        df = pd.DataFrame({'strings': values})
+        field = pa.field('strings', pa.string())
+        schema = pa.schema([field])
+        table = pa.Table.from_pandas(df, schema=schema)
+
+        df = table.to_pandas(str_to_categorical=True)
+        assert df['strings'].dtype.name == 'category'
+
 
 def _pytime_from_micros(val):
     microseconds = val % 1000000

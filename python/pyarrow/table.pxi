@@ -147,7 +147,14 @@ cdef class Column:
         sp_column.reset(new CColumn(boxed_field.sp_field, arr.sp_array))
         return pyarrow_wrap_column(sp_column)
 
-    def to_pandas(self):
+    def cast(self, DataType dtype):
+        cdef:
+            shared_ptr[CColumn] c_column
+        self._check_nullptr()
+        check_status(self.column.cast(dtype.sp_type, &c_column))
+        return pyarrow_wrap_column(c_column)
+
+    def to_pandas(self, str_to_categorical=False):
         """
         Convert the arrow::Column to a pandas.Series
 
@@ -156,10 +163,15 @@ cdef class Column:
         pandas.Series
         """
         cdef:
-            PyObject* out
-
-        check_status(libarrow.ConvertColumnToPandas(self.sp_column,
-                                                    self, &out))
+            PyObject* out 
+            shared_ptr[CArray] arr
+        
+        col = self.sp_column
+        if str_to_categorical:
+            dtype = dictionary(self.type, pyarrow_wrap_array(arr))
+            col = pyarrow_unwrap_column(self.cast(dtype))
+        
+        check_status(libarrow.ConvertColumnToPandas(col, self, &out))
 
         return pd.Series(wrap_array_output(out), name=self.name)
 
@@ -536,7 +548,7 @@ cdef class RecordBatch:
         return OrderedDict(entries)
 
 
-    def to_pandas(self, nthreads=None):
+    def to_pandas(self, nthreads=None, str_to_categorical=False):
         """
         Convert the arrow::RecordBatch to a pandas DataFrame
 
@@ -544,6 +556,8 @@ cdef class RecordBatch:
         -------
         pandas.DataFrame
         """
+        if str_to_categorical:
+            raise NotImplementedError()
         return Table.from_batches([self]).to_pandas(nthreads=nthreads)
 
     @classmethod
@@ -826,7 +840,13 @@ cdef class Table:
 
         return pyarrow_wrap_table(c_table)
 
-    def to_pandas(self, nthreads=None):
+    def cast_column(self, int col_index, DataType dtype):
+        cdef shared_ptr[CTable] c_table
+        self._check_nullptr()
+        check_status(self.table.CastColumn(col_index, dtype.sp_type, &c_table))
+        return pyarrow_wrap_table(c_table)
+
+    def to_pandas(self, nthreads=None, str_to_categorical=False):
         """
         Convert the arrow::Table to a pandas DataFrame
 
@@ -845,7 +865,14 @@ cdef class Table:
         if nthreads is None:
             nthreads = cpu_count()
 
-        mgr = pdcompat.table_to_blockmanager(self, nthreads)
+        table = self
+        for ix, col in enumerate(self.itercolumns()):
+            if str_to_categorical and col.type.id == Type_STRING:
+                # Doesn't matter what type the dictionary is initialized with
+                dtype = dictionary(col.type, col.data.chunk(0))
+                table = table.cast_column(ix, dtype)
+
+        mgr = pdcompat.table_to_blockmanager(table, nthreads)
         return pd.DataFrame(mgr)
 
     def to_pydict(self):

@@ -727,6 +727,8 @@ class ARROW_EXPORT Schema {
   Status AddField(int i, const std::shared_ptr<Field>& field,
                   std::shared_ptr<Schema>* out) const;
   Status RemoveField(int i, std::shared_ptr<Schema>* out) const;
+  Status ReplaceField(int i, const std::shared_ptr<Field>& field,
+                      std::shared_ptr<Schema>* out) const;
 
   /// \deprecated
   Status AddMetadata(const std::shared_ptr<const KeyValueMetadata>& metadata,

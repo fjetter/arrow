@@ -285,7 +285,12 @@ cdef class Array:
 
         return pyarrow_wrap_array(result)
 
-    def to_pandas(self):
+    def cast(self, DataType dtype):
+        cdef shared_ptr[CArray] c_array
+        check_status(self.ap.cast(dtype.sp_type, &c_array))
+        return pyarrow_wrap_array(c_array)
+
+    def to_pandas(self, to_categorical=False):
         """
         Convert to an array object suitable for use in pandas
 
@@ -297,9 +302,14 @@ cdef class Array:
         """
         cdef:
             PyObject* out
+            shared_ptr[CArray] arr
+        arr = self.sp_array
+        if to_categorical:
+            dtype = dictionary(self.type, pyarrow_wrap_array(self.sp_array))
+            arr = pyarrow_unwrap_array(self.cast(dtype))
 
         with nogil:
-            check_status(ConvertArrayToPandas(self.sp_array, self, &out))
+            check_status(ConvertArrayToPandas(arr, self, &out))
         return wrap_array_output(out)
 
     def to_pylist(self):

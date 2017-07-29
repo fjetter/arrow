@@ -288,6 +288,14 @@ int64_t Schema::GetFieldIndex(const std::string& name) const {
   }
 }
 
+Status Schema::ReplaceField(int i, const std::shared_ptr<Field>& field,
+                            std::shared_ptr<Schema>* out) const {
+  DCHECK_GE(i, 0);
+  DCHECK_LE(i, this->num_fields());
+  *out = std::make_shared<Schema>(ReplaceVectorElement(fields_, i, field), metadata_);
+  return Status::OK();
+}
+
 Status Schema::AddField(int i, const std::shared_ptr<Field>& field,
                         std::shared_ptr<Schema>* out) const {
   DCHECK_GE(i, 0);

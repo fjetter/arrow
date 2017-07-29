@@ -228,7 +228,7 @@ class ARROW_EXPORT Table {
                    std::shared_ptr<Table>* out) const;
 
   /// Casts the column on position i to the given type
-  Status castColumn(int i, const std::shared_ptr<DataType>& type,
+  Status CastColumn(int i, const std::shared_ptr<DataType>& type,
                     std::shared_ptr<Table>* out) const;
 
   /// \brief Replace schema key-value metadata with new metadata (EXPERIMENTAL)

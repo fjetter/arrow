@@ -434,16 +434,14 @@ Status Table::AddColumn(int i, const std::shared_ptr<Column>& col,
   return Status::OK();
 }
 
-Status Table::castColumn(int i, const std::shared_ptr<DataType>& type,
+Status Table::CastColumn(int i, const std::shared_ptr<DataType>& type,
                          std::shared_ptr<Table>* out) const {
   std::shared_ptr<Column> old_col = columns_[i];
   std::shared_ptr<Column> new_col;
   std::shared_ptr<Schema> new_schema;
   RETURN_NOT_OK(old_col->cast(type, &new_col));
-  RETURN_NOT_OK(schema_->RemoveField(i, &new_schema));
-  RETURN_NOT_OK(schema_->AddField(i, new_col->field(), &new_schema));
-  *out = std::make_shared<Table>(
-      new_schema, AddVectorElement(DeleteVectorElement(columns_, i), i, new_col));
+  RETURN_NOT_OK(schema_->ReplaceField(i, new_col->field(), &new_schema));
+  *out = std::make_shared<Table>(new_schema, ReplaceVectorElement(columns_, i, new_col));
   return Status::OK();
 }
 

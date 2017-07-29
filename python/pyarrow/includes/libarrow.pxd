@@ -93,6 +93,9 @@ cdef extern from "arrow/api.h" namespace "arrow" nogil:
 
         int num_fields()
 
+        CStatus cast(shared_ptr[CDataType]& dtype,
+                     shared_ptr[CArray]* out)
+
         c_bool Equals(const CArray& arr)
         c_bool IsNull(int i)
 
@@ -332,6 +335,8 @@ cdef extern from "arrow/api.h" namespace "arrow" nogil:
 
         c_bool Equals(const CColumn& other)
 
+        CStatus cast(shared_ptr[CDataType]& dtype, shared_ptr[CColumn]* out)
+
         int64_t length()
         int64_t null_count()
         const c_string& name()
@@ -379,6 +384,9 @@ cdef extern from "arrow/api.h" namespace "arrow" nogil:
         CStatus AddColumn(int i, const shared_ptr[CColumn]& column,
                           shared_ptr[CTable]* out)
         CStatus RemoveColumn(int i, shared_ptr[CTable]* out)
+
+        CStatus CastColumn(int i, const shared_ptr[CDataType]& dtype,
+                           shared_ptr[CTable]* out)
 
         shared_ptr[CTable] ReplaceSchemaMetadata(
             const shared_ptr[CKeyValueMetadata]& metadata)
