@@ -131,7 +131,7 @@ Status Array::castTyped<DictionaryType>(std::shared_ptr<Array>* out) {
   MemoryPool* pool = default_memory_pool();
   RETURN_NOT_OK(MakeDictionaryArray(pool, *this, out));
   return Status::OK();
-};
+}
 
 Status Array::cast(const std::shared_ptr<DataType>& type, std::shared_ptr<Array>* out) {
   switch (type->id()) {
@@ -144,7 +144,7 @@ Status Array::cast(const std::shared_ptr<DataType>& type, std::shared_ptr<Array>
       ss << " to " << type->ToString();
       return Status::NotImplemented(ss.str());
   }
-};
+}
 
 static inline std::shared_ptr<ArrayData> SliceData(const ArrayData& data, int64_t offset,
                                                    int64_t length) {
