@@ -890,9 +890,9 @@ class TestPandasConversion(unittest.TestCase):
         arr = np.array([None, 'a', 'b'] * 5, dtype=object)
         pa_arr = pa.Array.from_pandas(arr, type=pa.string())
 
-        series = pa_arr.to_pandas(to_categorical=True)
-
-        assert series.dtype.name == 'category'
+        result = pa_arr.to_pandas(to_categorical=True)
+        expected = pd.Categorical(arr)
+        tm.assert_categorical_equal(result, expected)
 
     def test_table_str_to_categorical(self):
         values = ['a', None, 'b', np.nan]
@@ -901,9 +901,9 @@ class TestPandasConversion(unittest.TestCase):
         schema = pa.schema([field])
         table = pa.Table.from_pandas(df, schema=schema)
 
-        df = table.to_pandas(str_to_categorical=True)
-        assert df['strings'].dtype.name == 'category'
-
+        result = table.to_pandas(str_to_categorical=True)
+        expected = pd.DataFrame({'strings': pd.Categorical(values)})
+        tm.assert_frame_equal(result, expected, check_dtype=True)
 
 def _pytime_from_micros(val):
     microseconds = val % 1000000
