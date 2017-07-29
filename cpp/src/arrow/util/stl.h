@@ -57,7 +57,7 @@ inline std::vector<T> AddVectorElement(const std::vector<T>& values, size_t inde
 
 template <typename T>
 inline std::vector<T> ReplaceVectorElement(const std::vector<T>& values, size_t index,
-                                       const T& new_element) {
+                                           const T& new_element) {
   DCHECK(!values.empty());
   DCHECK_LE(index, values.size());
   std::vector<T> out;
