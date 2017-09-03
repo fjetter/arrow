@@ -735,7 +735,7 @@ def test_read_partitioned_directory(tmpdir):
     _partition_test_for_filesystem(fs, base_path)
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def s3_example():
     access_key = os.environ['PYARROW_TEST_S3_ACCESS_KEY']
     secret_key = os.environ['PYARROW_TEST_S3_SECRET_KEY']

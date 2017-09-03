@@ -216,7 +216,7 @@ def serialization_roundtrip(value, f):
     assert_equal(value, result)
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.fixture(scope='session')
 def large_memory_map(tmpdir_factory):
     path = (tmpdir_factory.mktemp('data')
             .join('pyarrow-serialization-tmp-file').strpath)
