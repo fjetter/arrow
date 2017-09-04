@@ -646,10 +646,7 @@ class ParquetDataset(object):
 
 
 def _ensure_filesystem(fs):
-    if not isinstance(fs, type):
-        fs_type = type(fs)
-    else:
-        fs_type = fs
+    fs_type = type(fs)
 
     if not issubclass(fs_type, FileSystem):
         for mro in inspect.getmro(fs_type):
