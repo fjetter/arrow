@@ -503,10 +503,10 @@ cdef class ColumnSchema:
     def __repr__(self):
         physical_type = self.physical_type
         logical_type = self.logical_type
-        if logical_type == 'DECIMAL':
+        if str(logical_type) == 'DECIMAL':
             logical_type = 'DECIMAL({0}, {1})'.format(self.precision,
                                                       self.scale)
-        elif physical_type == 'FIXED_LEN_BYTE_ARRAY':
+        elif str(physical_type) == 'FIXED_LEN_BYTE_ARRAY':
             logical_type = ('FIXED_LEN_BYTE_ARRAY(length={0})'
                             .format(self.length))
 
@@ -809,14 +809,15 @@ cdef class ParquetReader:
         return array
 
 cdef int check_compression_name(name) except -1:
-    if name.upper() not in ['NONE', 'SNAPPY', 'GZIP', 'LZO', 'BROTLI', 'LZ4',
-                            'ZSTD']:
+    if str(name.upper()) not in [
+            'NONE', 'SNAPPY', 'GZIP',
+            'LZO', 'BROTLI', 'LZ4', 'ZSTD']:
         raise ArrowException("Unsupported compression: " + name)
     return 0
 
 
 cdef ParquetCompression compression_from_name(str name):
-    name = name.upper()
+    name = str(name.upper())
     if name == "SNAPPY":
         return ParquetCompression_SNAPPY
     elif name == "GZIP":
@@ -829,8 +830,10 @@ cdef ParquetCompression compression_from_name(str name):
         return ParquetCompression_LZ4
     elif name == "ZSTD":
         return ParquetCompression_ZSTD
-    else:
+    elif name == "NONE":
         return ParquetCompression_UNCOMPRESSED
+    else:
+        raise ArrowException("Unsupported compression: " + name)
 
 
 cdef class ParquetWriter:
@@ -901,9 +904,9 @@ cdef class ParquetWriter:
 
     cdef int _set_coerce_timestamps(
             self, ArrowWriterProperties.Builder* props) except -1:
-        if self.coerce_timestamps == 'ms':
+        if str(self.coerce_timestamps) == 'ms':
             props.coerce_timestamps(TimeUnit_MILLI)
-        elif self.coerce_timestamps == 'us':
+        elif str(self.coerce_timestamps) == 'us':
             props.coerce_timestamps(TimeUnit_MICRO)
         elif self.coerce_timestamps is not None:
             raise ValueError('Invalid value for coerce_timestamps: {0}'
