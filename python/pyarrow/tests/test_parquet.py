@@ -2081,3 +2081,25 @@ def test_parquet_writer_context_obj_with_exception(tmpdir):
 
     expected = pd.concat(frames, ignore_index=True)
     tm.assert_frame_equal(result.to_pandas(), expected)
+
+
+@parquet
+def test_unicode_bytes_keyword_arguments():
+    """
+    Check that unicode and bytes literals are accepted
+    """
+    df = _test_dataframe(10)
+    _roundtrip_pandas_dataframe(
+        df, write_kwargs={
+            "compression": u"SNAPPY",
+            "version": u"2.0",
+            "coerce_timestamps": u"ms",
+        }
+    )
+    _roundtrip_pandas_dataframe(
+        df, write_kwargs={
+            "compression": b"SNAPPY",
+            "version": b"2.0",
+            "coerce_timestamps": b"ms",
+        }
+    )
