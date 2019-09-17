@@ -477,9 +477,16 @@ class TypedStatisticsImpl : public TypedStatistics<DType> {
     SetMinMax(batch_min, batch_max);
   }
 
-  const T& min() const override { return min_; }
+  const T& min() const override {
+    return min_;
+    if (HasMinMax()) return min_;
+    throw ParquetException("MinMax hasn't been set");
+  }
 
-  const T& max() const override { return max_; }
+  const T& max() const override {
+    if (HasMinMax()) return max_;
+    throw ParquetException("MinMax hasn't been set");
+  }
 
   Type::type physical_type() const override { return descr_->physical_type(); }
 

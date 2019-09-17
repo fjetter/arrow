@@ -3295,3 +3295,24 @@ def test_filter_before_validate_schema(tempdir):
     # read single file using filter
     table = pq.read_table(tempdir, filters=[[('A', '==', 0)]])
     assert table.column('B').equals(pa.chunked_array([[1, 2, 3]]))
+
+
+@pytest.mark.pandas
+def test_statistics_nat():
+    df = pd.DataFrame({"t": pd.Series([pd.NaT], dtype="datetime64[ns]")})
+    pq_file = make_sample_file(df)
+
+    col_schema = pq_file.metadata.schema[0]
+    assert col_schema.logical_type.type == "TIMESTAMP"
+
+    rg_meta = pq_file.metadata.row_group(0)
+    col_meta = rg_meta.column(0)
+
+    assert col_meta.physical_type == 'INT64'
+    assert col_meta.num_values == 1
+
+    with pytest.raises(ValueError, match="MinMax"):
+        col_meta.statistics.max
+
+    with pytest.raises(ValueError, match="MinMax"):
+        col_meta.statistics.min

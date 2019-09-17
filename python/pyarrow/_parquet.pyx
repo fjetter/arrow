@@ -184,7 +184,7 @@ cdef wrap_logical_type(const shared_ptr[const CParquetLogicalType]& type):
     return out
 
 
-cdef _cast_statistic_raw_min(CStatistics* statistics):
+cdef _cast_statistic_raw_min(CStatistics* statistics) except +:
     cdef ParquetType physical_type = statistics.physical_type()
     cdef uint32_t type_length = statistics.descr().type_length()
     if physical_type == ParquetType_BOOLEAN:
@@ -203,7 +203,7 @@ cdef _cast_statistic_raw_min(CStatistics* statistics):
         return _box_flba((<CFLBAStatistics*> statistics).min(), type_length)
 
 
-cdef _cast_statistic_raw_max(CStatistics* statistics):
+cdef _cast_statistic_raw_max(CStatistics* statistics) except +:
     cdef ParquetType physical_type = statistics.physical_type()
     cdef uint32_t type_length = statistics.descr().type_length()
     if physical_type == ParquetType_BOOLEAN:
