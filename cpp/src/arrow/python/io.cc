@@ -266,6 +266,7 @@ Result<std::shared_ptr<Buffer>> PyReadableFile::ReadAt(int64_t position, int64_t
 }
 
 Result<int64_t> PyReadableFile::GetSize() {
+  std::lock_guard<std::mutex> guard(file_->lock());
   return SafeCallIntoPython([=]() -> Result<int64_t> {
     ARROW_ASSIGN_OR_RAISE(int64_t current_position, file_->Tell());
     RETURN_NOT_OK(file_->Seek(0, 2));
